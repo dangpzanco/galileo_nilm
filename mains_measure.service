@@ -1,0 +1,10 @@
+[Unit]
+Description=Read mains measurements from serial
+After=syslog.target
+
+[Service]
+ExecStart=/usr/bin/python /home/root/mains_measure.py 1
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

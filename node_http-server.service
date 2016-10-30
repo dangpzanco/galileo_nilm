@@ -1,0 +1,10 @@
+[Unit]
+Description=NodeJS Simple HTTP Static File Server
+After=syslog.target
+
+[Service]
+ExecStart=/usr/bin/http-server /home/root/ -p 80
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
