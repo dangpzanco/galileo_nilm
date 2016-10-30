@@ -72,7 +72,6 @@ if not os.path.isfile(model_filename):
     model.add(Reshape(target_shape=(win_size, num_filters)))
     model.add(Conv1D(nb_filter=1, filter_length=filter_len, border_mode='same', activation='relu'))
 
-    # model.compile(loss='mean_squared_error', optimizer=opt.SGD(lr=0.01, momentum=0.9, nesterov=True), metrics=['accuracy'])
     model.compile(loss='mean_squared_error', optimizer=opt.adagrad(lr=0.01, epsilon=1e-8, decay=0.0),
                   metrics=['accuracy'])
     keras_plot(model, to_file='kettle_model.png', show_shapes=True, show_layer_names=True)
@@ -92,69 +91,6 @@ plt.figure()
 plt.plot(Y_train[:, 0, 0])
 plt.plot(mean_pred)
 plt.show()
-
-# # get testing data
-#
-# begin_test = pd.Timestamp('2013-7-27')
-# end_test = pd.Timestamp('2013-7-29')
-#
-# mains_test = np.array(df['mains'][begin_test:end_test]).ravel()
-# kettle_test = np.array(df['kettle'][begin_test:end_test]).ravel()
-#
-# mu = np.min(mains_test, axis=0)
-# mains_test -= mu
-# sigma = np.std(mains_test, axis=0)
-# mains_test /= sigma
-#
-# # kettle_test -= mu
-# kettle_test /= sigma
-#
-# # set window size
-# win_size = 50
-#
-# # build input and output training data
-# num_examples = mains_test.size - win_size
-# X_test = np.zeros(shape=(num_examples, win_size, 1))
-# Y_test = np.zeros(shape=(num_examples, win_size, 1))
-#
-# for i in xrange(0, num_examples):
-#     X_test[i, :, 0] = mains_test[i:i+win_size]
-#     Y_test[i, :, 0] = kettle_test[i:i+win_size]
-#
-# eval_log = model.evaluate(X_test, Y_test, batch_size=100)
-# print eval_log
-#
-# pred = model.predict(X_test, batch_size=100, verbose=1)
-#
-# mean_pred = np.zeros((mains_train.size,))
-# for i in xrange(0, num_examples):
-#     mean_pred[i:i+win_size] = mean_pred[i:i+win_size] + pred[i, :, 0]/float(win_size)
-#
-# plt.figure()
-# plt.plot(Y_test[:, 0, 0])
-# plt.plot(mean_pred)
-# plt.show()
-
-
-# output json
-
-# power_data = np.empty((mains_test.size, 2))
-# power_data[:, 0] = mains_test
-# power_data[:, 1] = mean_pred
-# timestamp = pd.date_range(begin_test, freq='6S', periods=mains_test.size)
-# output_df = pd.DataFrame(power_data, index=timestamp, columns=['mains', 'kettle'])
-#
-# json_filename = 'active_power-' + str(begin_test) + '.json'
-# output_df.to_json(json_filename, orient='columns', date_format='iso')
-
-
-# mean_pred[0] = pred[0, 0, 0]
-# for i in xrange(1, num_examples):
-#     alpha = 1 / i
-#     mean_pred[i:i+win_size] = (1 - alpha) * mean_pred[i-1:i-1+win_size] + alpha * pred[i, :, 0]
-
-# model.fit_generator(simple_generator(hdf_filename, building_num, meter_num, batch_size=32, win_size=win_size),
-#                     samples_per_epoch=100000, nb_epoch=10)
 
 
 
