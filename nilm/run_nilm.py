@@ -193,7 +193,9 @@ while 1:
     if num_samples <= 0:
         print "NILM is ahead of measure! Sleeping..."
         time.sleep(6)
-        continue
+        measure_index = get_measure_index(measure_index_filename)
+        num_samples = measure_index - nilm_index
+        temp_index = nilm_index
 
     for i in xrange(temp_index, measure_index):
 
