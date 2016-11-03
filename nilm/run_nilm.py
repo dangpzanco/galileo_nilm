@@ -1,6 +1,5 @@
 import json, os, io
 import numpy as np
-import time
 
 
 def NN_conv1d(x, W, b, activation='linear'):
@@ -66,8 +65,6 @@ def get_measure_index(measure_index_filename):
                 measure_index = int(myfile.read())
         except IOError as e:
             print e
-            print 'Sleeping for 6 seconds...'
-            time.sleep(6)
             continue
         return measure_index
 
@@ -82,8 +79,6 @@ def get_measure_val(index, path='/home/root/measure/'):
                 val = data[data.keys()[0]]
         except IOError as e:
             print e
-            print 'Sleeping for 6 seconds...'
-            time.sleep(6)
             continue
         return val
 
@@ -97,8 +92,6 @@ def get_measure_time(index, path='/home/root/measure/'):
                 timestamp = data.keys()[0]
         except IOError as e:
             print e
-            print 'Sleeping for 6 seconds...'
-            time.sleep(6)
             continue
         return timestamp
 
@@ -188,14 +181,6 @@ while 1:
     measure_index = get_measure_index(measure_index_filename)
     num_samples = measure_index - nilm_index
     temp_index = nilm_index
-    
-    # Sleep if there are no new samples
-    if num_samples <= 0:
-        print "NILM is ahead of measure! Sleeping..."
-        time.sleep(6)
-        measure_index = get_measure_index(measure_index_filename)
-        num_samples = measure_index - nilm_index
-        temp_index = nilm_index
 
     for i in xrange(temp_index, measure_index):
 
@@ -214,6 +199,8 @@ while 1:
         nilm_data = output_vec[0]/float(win_size)
 
         # save data
+        print str(i + 1 - win_size)
+        print nilm_data
         save_nilm_data(nilm_data, i + 1 - win_size)
 
         # save buffers
@@ -224,5 +211,6 @@ while 1:
         # increment index and save to logfile
         nilm_index += 1
         print "nilm_index = " + str(nilm_index)
+        
         with open(nilm_index_filename, 'w') as myfile:
             myfile.write(str(nilm_index))
