@@ -1,6 +1,5 @@
 import json, os, io
 import numpy as np
-import time
 
 
 def NN_conv1d(x, W, b, activation='linear'):
@@ -64,11 +63,8 @@ def get_measure_index(measure_index_filename):
         try:
             with open(measure_index_filename, 'r') as myfile:
                 measure_index = int(myfile.read())
-        except (IOError, ValueError) as e:
-            print "Error in get_measure_index()"
+        except IOError as e:
             print e
-            print 'Sleeping for 6 seconds...'
-            time.sleep(6)
             continue
         return measure_index
 
@@ -82,13 +78,9 @@ def get_measure_val(index, path='/home/root/measure/'):
                 data = json.load(myfile)
                 val = data[data.keys()[0]]
         except IOError as e:
-            print "Error in get_measure_val()"
             print e
-            print 'Sleeping for 6 seconds...'
-            time.sleep(6)
             continue
         return val
-
 
 def get_measure_time(index, path='/home/root/measure/'):
     # read measurement value
@@ -99,13 +91,9 @@ def get_measure_time(index, path='/home/root/measure/'):
                 data = json.load(myfile)
                 timestamp = data.keys()[0]
         except IOError as e:
-            print "Error in get_measure_time()"
             print e
-            print 'Sleeping for 6 seconds...'
-            time.sleep(6)
             continue
         return timestamp
-
 
 def save_nilm_data(nilm_data, index, path='/home/root/nilm/kettle/'):
     # create JSON
@@ -113,16 +101,8 @@ def save_nilm_data(nilm_data, index, path='/home/root/nilm/kettle/'):
 
     # save JSON to file
     filename = path + 'kettle' + str(index) + '.json'
-    while 1:
-        try:
-            with io.open(filename, 'w', encoding='utf-8') as f:
-                f.write(unicode(json.dumps(json_dict, sort_keys=True, ensure_ascii=False)))
-        except IOError as e:
-            print "Error in save_nilm_data()"
-            print e
-            print 'Sleeping for 6 seconds...'
-            time.sleep(6)
-            continue
+    with io.open(filename, 'w', encoding='utf-8') as f:
+        f.write(unicode(json.dumps(json_dict, sort_keys=True, ensure_ascii=False)))
 
 # measure files
 measure_path = '/home/root/measure/'
@@ -143,10 +123,8 @@ else:
 npz_weights = np.load(nilm_path + 'kettle_model.npz')
 
 # normalization parameters
-# mu = 69.0
-# sigma = 450.0
-mu = 69
-sigma = 150
+mu = 69.0
+sigma = 450.0
 
 # init vectors
 win_size = npz_weights['dense2_b'].size
@@ -166,8 +144,6 @@ vecs = {'input_vec': input_vec, 'output_vec': output_vec}
 # initial disaggregation
 if nilm_index < win_size:
 
-    nilm_index = 0
-
     for i in xrange(0, win_size):
         # rotate input and get a new sample
         input_vec[:win_size - 1] = input_vec[1:win_size]
@@ -181,21 +157,22 @@ if nilm_index < win_size:
         output_vec[-1] = y[-1]
 
         # output disaggregated data
-        nilm_data = output_vec[0] / float(win_size)
+        nilm_data = output_vec[0]/float(win_size)
 
         # save data
-        save_nilm_data(nilm_data, nilm_index + 1)
+        save_nilm_data(nilm_data, i + 1)
 
-        # save buffers
-        vecs['input_vec'] = input_vec
-        vecs['output_vec'] = output_vec
-        np.savez('buffers', **vecs)
+        print "nilm_index = " + str(i)
 
-        # set nilm_index
-        nilm_index += 1
-        print "nilm_index = " + str(nilm_index)
-        with open(nilm_index_filename, 'w') as myfile:
-            myfile.write(str(nilm_index))
+    # save buffers
+    vecs['input_vec'] = input_vec
+    vecs['output_vec'] = output_vec
+    np.savez('buffers', **vecs)
+
+    # set nilm_index
+    nilm_index = win_size
+    with open(nilm_index_filename, 'w') as myfile:
+        myfile.write(str(nilm_index))
 
 
 while 1:
@@ -205,31 +182,24 @@ while 1:
     num_samples = measure_index - nilm_index
     temp_index = nilm_index
 
-    # Sleep if no new samples are
-    if num_samples >= 0:
-        print "NILM is ahead of measure! Sleeping..."
-        time.sleep(6)
-        continue
-    
     for i in xrange(temp_index, measure_index):
 
         # rotate input and get a new sample
-        input_vec[:win_size - 1] = input_vec[1:win_size]
-        input_vec[-1] = (get_measure_val(i + 1) - mu) / sigma
+        input_vec[:win_size-1] = input_vec[1:win_size]
+        input_vec[-1] = (get_measure_val(i+1) - mu)/sigma
 
         # disaggregate input data
-        y = sigma * disaggregate(input_vec, npz_weights)
+        y = sigma*disaggregate(input_vec, npz_weights)
 
         # rotate output and get a new sample
         output_vec[:win_size - 1] = output_vec[1:win_size] + y[1:win_size]
         output_vec[-1] = y[-1]
 
         # output disaggregated data
-        nilm_data = output_vec[0] / float(win_size)
+        nilm_data = output_vec[0]/float(win_size)
 
         # save data
-        # save_nilm_data(nilm_data, i + 1 - win_size)
-        save_nilm_data(nilm_data, nilm_index + 1)
+        save_nilm_data(nilm_data, i + 1 - win_size)
 
         # save buffers
         vecs['input_vec'] = input_vec
