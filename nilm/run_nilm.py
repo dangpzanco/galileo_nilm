@@ -1,5 +1,6 @@
 import json, os, io
 import numpy as np
+import time
 
 
 def NN_conv1d(x, W, b, activation='linear'):
@@ -65,6 +66,8 @@ def get_measure_index(measure_index_filename):
                 measure_index = int(myfile.read())
         except IOError as e:
             print e
+            print 'Sleeping for 6 seconds...'
+            time.sleep(6)
             continue
         return measure_index
 
@@ -79,6 +82,8 @@ def get_measure_val(index, path='/home/root/measure/'):
                 val = data[data.keys()[0]]
         except IOError as e:
             print e
+            print 'Sleeping for 6 seconds...'
+            time.sleep(6)
             continue
         return val
 
@@ -92,6 +97,8 @@ def get_measure_time(index, path='/home/root/measure/'):
                 timestamp = data.keys()[0]
         except IOError as e:
             print e
+            print 'Sleeping for 6 seconds...'
+            time.sleep(6)
             continue
         return timestamp
 
@@ -101,8 +108,16 @@ def save_nilm_data(nilm_data, index, path='/home/root/nilm/kettle/'):
 
     # save JSON to file
     filename = path + 'kettle' + str(index) + '.json'
-    with io.open(filename, 'w', encoding='utf-8') as f:
-        f.write(unicode(json.dumps(json_dict, sort_keys=True, ensure_ascii=False)))
+    while 1:
+        try:
+            with io.open(filename, 'w', encoding='utf-8') as f:
+                f.write(unicode(json.dumps(json_dict, sort_keys=True, ensure_ascii=False)))
+        except IOError as e:
+            print "Error in save_nilm_data()"
+            print e
+            print 'Sleeping for 6 seconds...'
+            time.sleep(6)
+            continue
 
 # measure files
 measure_path = '/home/root/measure/'
@@ -181,6 +196,12 @@ while 1:
     measure_index = get_measure_index(measure_index_filename)
     num_samples = measure_index - nilm_index
     temp_index = nilm_index
+    
+    # Sleep if there are no new samples
+    if num_samples >= 0:
+        print "NILM is ahead of measure! Sleeping..."
+        time.sleep(6)
+        continue
 
     for i in xrange(temp_index, measure_index):
 
