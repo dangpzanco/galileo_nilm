@@ -108,16 +108,8 @@ def save_nilm_data(nilm_data, index, path='/home/root/nilm/kettle/'):
 
     # save JSON to file
     filename = path + 'kettle' + str(index) + '.json'
-    while 1:
-        try:
-            with io.open(filename, 'w', encoding='utf-8') as f:
-                f.write(unicode(json.dumps(json_dict, sort_keys=True, ensure_ascii=False)))
-        except IOError as e:
-            print "Error in save_nilm_data()"
-            print e
-            print 'Sleeping for 6 seconds...'
-            time.sleep(6)
-            continue
+    with io.open(filename, 'w', encoding='utf-8') as f:
+        f.write(unicode(json.dumps(json_dict, sort_keys=True, ensure_ascii=False)))
 
 # measure files
 measure_path = '/home/root/measure/'
@@ -198,7 +190,7 @@ while 1:
     temp_index = nilm_index
     
     # Sleep if there are no new samples
-    if num_samples >= 0:
+    if num_samples <= 0:
         print "NILM is ahead of measure! Sleeping..."
         time.sleep(6)
         continue
